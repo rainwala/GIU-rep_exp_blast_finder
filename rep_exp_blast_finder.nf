@@ -45,7 +45,7 @@ process MAP_REGION {
 
   script:
   """
-  minimap2 -ax map-ont -t ${task.cpus} ${params.ref_mmi_path} $fastq -o sam
+  ${params.minimap2_exec_path} -ax map-ont --MD -t ${task.cpus} ${params.ref_mmi_path} $fastq -o sam
 	samtools view -h -@ ${task.cpus} -L ${params.bed_path} sam | samtools fasta -@ ${task.cpus} >rep_region_reads.fa
   """
 }
@@ -81,7 +81,7 @@ process MOD_ALIGN {
 
 	script:
   """
-	minimap2 -ax map-ont -t ${task.cpus} ${params.ref_mmi_path} $mod_fq -o sam
+	${params.minimap2_exec_path} -ay -x map-ont --MD -t ${task.cpus} ${params.ref_mmi_path} $mod_fq -o sam
 	samtools sort -@ ${task.cpus} sam >mod_aln_bam
   """
 
@@ -145,6 +145,7 @@ process PYTHON2 {
   publishDir params.out_path, mode: 'copy'
 
   input:
+	path 'rep_region_reads.fa'
   path 'blast_rep_region_finder_output.txt'
   path 'per_read_mods.txt'
 
@@ -153,7 +154,7 @@ process PYTHON2 {
 
   script:
   """
-  parse_methylation_and_expansion_data_to_table.py blast_rep_region_finder_output.txt per_read_mods.txt ${params.meth_region_lb} ${params.meth_region_ub} >per_read_expansion_and_methylation_info.txt
+	parse_methylation_and_expansion_data.py rep_region_reads.fa blast_rep_region_finder_output.txt per_read_mods.txt  >per_read_expansion_and_methylation_info.txt
   """
 
 }
@@ -166,5 +167,5 @@ workflow{
 	prm_ch = EXTRACT_MODS( maln_ch )
   blast_ch = BLAST( map_ch )
 	py_ch = PYTHON( map_ch, blast_ch )
-	PYTHON2( py_ch, prm_ch )
+	PYTHON2( map_ch, py_ch, prm_ch )
 }

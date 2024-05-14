@@ -41,9 +41,9 @@ def get_flank_and_rep_seqs(read_id,max_qcoords):
 	rep_seq = record_dict[read_id].seq[max_qcoords[1]:max_qcoords[2]]
 	rflank = record_dict[read_id].seq[max_qcoords[2]:max_qcoords[3]]
 	if rep_seq.count('CCCCGG') > rep_seq.count('GGGGCC'):
-		lflank = str( Seq(lflank).reverse_complement() )
+		lflank = str( Seq(rflank).reverse_complement() )
 		rep_seq = str( Seq(rep_seq).reverse_complement() )
-		rflank = str( Seq(rflank).reverse_complement() )
+		rflank = str( Seq(lflank).reverse_complement() )
 	return (lflank,rep_seq,rflank)
 
 def print_repeat_exp_seq(read_id,aln_list):
